@@ -13,7 +13,7 @@ module TickTock
     punch.out(card)
   end
 
-  def wrap_yield
+  def wrap_block(subject: nil)
     raise ArgumentError unless block_given?
     card = tick
     result = yield
@@ -21,24 +21,23 @@ module TickTock
     result
   end
 
-  def wrap_proc
-    raise ArgumentError unless block_given?
+  def wrap_proc(subject: nil, &p)
     proc do |*args|
-      wrap_yield do
-        yield(*args)
+      wrap_block(subject: subject) do
+        p.call(*args)
       end
     end
   end
 
-  def wrap_lazy(enum)
+  def wrap_lazy(enum, subject: nil)
     card_state = [nil]
-    do_tick = -> { card_state[0] = tick; [] }
-    do_tock = -> { card_state[0] = tock(card_state[0]); [] }
+    lazy_tick = ->(_) { card_state[0] = tick(subject: subject); [] }
+    lazy_tock = ->(_) { card_state[0] = tock(card_state[0]); [] }
 
     [
-      [:dummy].lazy.flat_map(&do_tick),
+      [:dummy].lazy.flat_map(&lazy_tick),
       enum,
-      [:dummy].lazy.flat_map(&do_tock)
+      [:dummy].lazy.flat_map(&lazy_tock)
     ].
       lazy.
       flat_map(&:itself)
