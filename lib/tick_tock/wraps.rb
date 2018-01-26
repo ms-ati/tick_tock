@@ -2,15 +2,17 @@ module TickTock
   module Wraps
     def wrap_block(*tick_args)
       card = tick(*tick_args)
-      yield
+      yield card
     ensure
       tock(card)
     end
 
     def wrap_proc(*tick_args, &proc_to_wrap)
-      proc do |*args|
-        wrap_block(*tick_args) do
-          proc_to_wrap.call(*args)
+      proc do |*proc_args|
+        new_tick_args = call_subject_if_necessary(tick_args, proc_args)
+
+        wrap_block(*new_tick_args) do
+          proc_to_wrap.call(*proc_args)
         end
       end
     end
@@ -28,6 +30,24 @@ module TickTock
     end
 
     private
+
+    # If the subject was itself a Proc, process the wrapped proc's *args*
+    # to actually generate the subject for the wrapped timing.
+    #
+    # @param tick_args [Array]
+    # @param proc_args [Array]
+    # @return [Array] args to actually be passed to {#tick}
+    def call_subject_if_necessary(tick_args, proc_args)
+      kw_args = tick_args.last
+      subject = kw_args&.is_a?(Hash) ? kw_args[:subject] : nil
+
+      if subject&.respond_to?(:call)
+        new_kw_args = kw_args.merge(subject: subject.call(*proc_args))
+        tick_args.take(tick_args.length - 1) << new_kw_args
+      else
+        tick_args
+      end
+    end
 
     # Creates a bit of shared state for a lazy punch card, and returns two
     # `Proc` objects which use that state to do the `tick` and `tock` methods
