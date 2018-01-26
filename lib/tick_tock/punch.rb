@@ -1,8 +1,13 @@
-require "tick_tock/card_logger"
+require "values"
 
 module TickTock
   Punch = Value.new(:time_now, :log_card_in, :log_card_out)
+end
 
+require "tick_tock/punch/card"
+require "tick_tock/punch/card_logger"
+
+module TickTock
   class Punch
     def self.default
       default_time_now = Time.method(:now)
@@ -29,8 +34,5 @@ module TickTock
       log_card_out&.call(card_out)
       card_out
     end
-
-    Card = Value.new(:subject, :parent_card, :in, :out)
-    private_constant :Card
   end
 end

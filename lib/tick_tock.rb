@@ -1,49 +1,21 @@
 require "tick_tock/punch"
+require "tick_tock/timer"
 require "tick_tock/version"
 
 module TickTock
-  module_function
+  TIMER_METHODS = [:tick, :tock, :wrap_block, :wrap_proc, :wrap_lazy].freeze
 
-  def tick(subject: nil, parent_card: nil)
-    card = punch.card(subject: subject, parent_card: parent_card)
-    punch.in(card)
-  end
+  class << self
+    extend Forwardable
 
-  def tock(card)
-    punch.out(card)
-  end
+    delegate TIMER_METHODS => :default_timer
 
-  def wrap_block(subject: nil)
-    raise ArgumentError unless block_given?
-    card = tick
-    result = yield
-    tock(card)
-    result
-  end
-
-  def wrap_proc(subject: nil, &p)
-    proc do |*args|
-      wrap_block(subject: subject) do
-        p.call(*args)
-      end
+    def default_timer
+      @default_timer ||= Timer.new(Punch.default)
     end
-  end
 
-  def wrap_lazy(enum, subject: nil)
-    card_state = [nil]
-    lazy_tick = ->(_) { card_state[0] = tick(subject: subject); [] }
-    lazy_tock = ->(_) { card_state[0] = tock(card_state[0]); [] }
-
-    [
-      [:dummy].lazy.flat_map(&lazy_tick),
-      enum,
-      [:dummy].lazy.flat_map(&lazy_tock)
-    ].
-      lazy.
-      flat_map(&:itself)
-  end
-
-  def punch
-    @punch ||= Punch.default
+    def default_timer=(timer)
+      @default_timer = timer
+    end
   end
 end
