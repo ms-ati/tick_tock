@@ -1,3 +1,4 @@
+require "pp"
 require "tick_tock"
 
 lazy_enum = [1, 2, 3].lazy
@@ -11,10 +12,11 @@ TickTock.wrap_block(subject: "Top Level") do |top_card|
   )
 
   wrapped_enum = TickTock.wrap_lazy(
-    lazy_enum.map(&wrapped_slow_proc),
+    lazy_enum,
     subject: "Lazy Enum",
-    parent_card: top_card
-  )
+    parent_card: top_card,
+    wrap_card: true
+  ).map(&wrapped_slow_proc)
 
   pp wrapped_enum.to_a
 end

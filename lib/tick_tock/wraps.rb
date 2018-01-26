@@ -1,28 +1,46 @@
 module TickTock
   module Wraps
-    def wrap_block(*tick_args)
-      card = tick(*tick_args)
+    def wrap_block(**tick_kw_args)
+      card = tick(**tick_kw_args)
       yield card
     ensure
       tock(card)
     end
 
-    def wrap_proc(*tick_args, &proc_to_wrap)
+    def wrap_proc(**tick_kw_args, &proc_to_wrap)
       proc do |*proc_args|
-        new_tick_args = call_subject_if_necessary(tick_args, proc_args)
+        tick_kw_args_1, proc_args_1 =
+          process_tick_parent_card(tick_kw_args, proc_args)
 
-        wrap_block(*new_tick_args) do
-          proc_to_wrap.call(*proc_args)
+        tick_kw_args_2 =
+          process_tick_subject(tick_kw_args_1, proc_args_1)
+
+        wrap_block(**tick_kw_args_2) do
+          proc_to_wrap.call(*proc_args_1)
         end
       end
     end
 
-    def wrap_lazy(lazy_enum_to_wrap, *tick_args)
-      lazy_tick, lazy_tock = create_lazy_callbacks(*tick_args)
+    def wrap_lazy(lazy_enum_to_wrap, wrap_card: false, **tick_kw_args)
+      lazy_tick, lazy_tock, lazy_card = create_lazy_callbacks(**tick_kw_args)
+
+      enum_to_wrap =
+        if wrap_card
+          lazy_enum_to_wrap.lazy.map do |*elements|
+            WrappedElementsWithLazyCard.new(
+              lazy_card: lazy_card,
+              elements: elements
+            )
+          end
+        else
+          lazy_enum_to_wrap
+        end
 
       [
         [:dummy].lazy.flat_map(&lazy_tick),
-        lazy_enum_to_wrap,
+
+        enum_to_wrap,
+
         [:dummy].lazy.flat_map(&lazy_tock)
       ].
         lazy.
@@ -31,44 +49,71 @@ module TickTock
 
     private
 
-    # If the subject was itself a Proc, process the wrapped proc's *args*
-    # to actually generate the subject for the wrapped timing.
-    #
-    # @param tick_args [Array]
-    # @param proc_args [Array]
-    # @return [Array] args to actually be passed to {#tick}
-    def call_subject_if_necessary(tick_args, proc_args)
-      kw_args = tick_args.last
-      subject = kw_args&.is_a?(Hash) ? kw_args[:subject] : nil
+    class WrappedElementsWithLazyCard
+      attr_reader :lazy_card, :elements
 
-      if subject&.respond_to?(:call)
-        new_kw_args = kw_args.merge(subject: subject.call(*proc_args))
-        tick_args.take(tick_args.length - 1) << new_kw_args
+      def initialize(lazy_card:, elements:)
+        @lazy_card = lazy_card
+        @elements = elements
+      end
+    end
+    private_constant :WrappedElementsWithLazyCard
+
+    def process_tick_parent_card(tick_kw_args, proc_args)
+      arg = proc_args.first
+
+      case arg
+      when WrappedElementsWithLazyCard
+        [
+          tick_kw_args.merge(parent_card: arg.lazy_card.call),
+          arg.elements
+        ]
       else
-        tick_args
+        [tick_kw_args, proc_args]
       end
     end
 
-    # Creates a bit of shared state for a lazy punch card, and returns two
-    # `Proc` objects which use that state to do the `tick` and `tock` methods
-    # lazily, and can be wired up using {Enumerator::Lazy#flat_map}.
+    # If the `subject` is itself a proc, process the wrapped proc's *args*
+    # to actually generate the subject for the wrapped timing.
     #
-    # @return [Array(Proc, Proc)]
-    #   Two Procs which perform the "lazy tick" and "lazy tock"
-    def create_lazy_callbacks(*tick_args)
-      shared_card_state = [nil]
+    # @param tick_kw_args [Hash]
+    # @param proc_args [Array]
+    # @return [Array] args to actually be passed to {#tick}
+    def process_tick_subject(tick_kw_args, proc_args)
+      subject = tick_kw_args[:subject]
+
+      if subject&.respond_to?(:call)
+        tick_kw_args.merge(subject: subject.call(*proc_args))
+      else
+        tick_kw_args
+      end
+    end
+
+    # Creates shared state for a lazily-created punch card, and returns two
+    # `Proc` objects which use that state to do the `tick` and `tock` methods
+    # lazily, and can be wired up using {Enumerator::Lazy#flat_map}. Also
+    # returns a third `Proc` which returns the card itself, or `nil` if it has
+    # not been created yet.
+    #
+    # @return [Array(Proc, Proc, Proc)]
+    #   Two Procs which perform the "lazy tick" and "lazy tock" callbacks, and a
+    #   third which returns the "lazy card" created in the shared state.
+    def create_lazy_callbacks(**tick_kw_args)
+      shared_state = [nil]
+
+      lazy_card = proc { shared_state[0] }
 
       lazy_tick = proc do
-        shared_card_state[0] = tick(*tick_args)
+        shared_state[0] = tick(**tick_kw_args)
         [] # return no elements into a lazy `#flat_map`
       end
 
       lazy_tock = proc do
-        shared_card_state[0] = tock(shared_card_state[0])
+        shared_state[0] = tock(lazy_card.call)
         [] # return no elements into a lazy `#flat_map`
       end
 
-      [lazy_tick, lazy_tock]
+      [lazy_tick, lazy_tock, lazy_card]
     end
   end
 end
