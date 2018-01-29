@@ -67,7 +67,7 @@ RSpec.describe TickTock::LocalContext do
       include_context "a_proc_fetching_a_key_from_local_context"
 
       subject do
-        wrapped_proc = described_class.wrap_proc(a_proc)
+        wrapped_proc = described_class.wrap_proc(&a_proc)
         wrapped_proc.call(input_to_proc)
       end
     end
@@ -77,7 +77,7 @@ RSpec.describe TickTock::LocalContext do
       include_context "verify_tests_executed_asynchronously"
 
       subject do
-        wrapped_proc = described_class.wrap_proc(a_proc)
+        wrapped_proc = described_class.wrap_proc(&a_proc)
 
         thread = Thread.new do
           async_results << wrapped_proc.call(input_to_proc)
@@ -93,7 +93,7 @@ RSpec.describe TickTock::LocalContext do
       include_context "verify_tests_executed_asynchronously"
 
       subject do
-        wrapped_proc = described_class.wrap_proc(a_proc)
+        wrapped_proc = described_class.wrap_proc(&a_proc)
 
         fiber = Fiber.new do
           async_results << wrapped_proc.call(input_to_proc)
