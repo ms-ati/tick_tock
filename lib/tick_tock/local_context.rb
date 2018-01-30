@@ -25,14 +25,16 @@ module TickTock
     # the local context was changed.
     #
     # @example Wrap current local context into a Proc object
-    #   LocalContext[:foo] = :bar
-    #   wrapped_proc = LocalContext.wrap_proc { LocalContext[:foo] }
+    #   a_proc = proc { TickTock::LocalContext[:foo] }
     #
-    #   LocalContext[:foo] = 42
+    #   TickTock::LocalContext[:foo] = :bar
+    #   wrapped_proc = TickTock::LocalContext.wrap_proc(&a_proc)
+    #
+    #   TickTock::LocalContext[:foo] = 42
     #   wrapped_proc.call
     #   #=> :bar
     #
-    #   LocalContext[:foo]
+    #   TickTock::LocalContext[:foo]
     #   #=> 42
     #
     # @param proc_to_wrap [Proc]  A proc to wrap with the current local context
