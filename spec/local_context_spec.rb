@@ -14,18 +14,18 @@ RSpec.describe TickTock::LocalContext do
   describe ".wrap_proc" do
     shared_context "a_proc_fetching_a_key_from_local_context" do
       context "when no value set" do
-        it { expect { subject }.to raise_error(KeyError, /key not found/) }
+        let(:error_msg) { "key not found: #{a_key.inspect}" }
+
+        it { expect { subject }.to raise_error(KeyError, error_msg) }
       end
 
       context "when set to nil" do
+        let(:error_msg) { /nil can't be coerced into (Fixnum|Integer)/ }
+
         before(:each) { described_class[a_key] = nil }
 
         it "fetches nil which results in raising a TypeError in the Proc" do
-          expect { subject }.
-            to raise_error(
-                 TypeError,
-                 /nil can't be coerced into (Fixnum|Integer)/
-               )
+          expect { subject }.to raise_error(TypeError, error_msg)
         end
       end
 
