@@ -9,12 +9,17 @@ module TickTock
     def tick(subject: nil, parent_card: nil, use_existing_card: nil)
       card = use_existing_card || punch.card(
         subject: subject,
-        parent_card: parent_card
+        parent_card: parent_card || TickTock.current_card_in_local_context
       )
-      punch.in(card)
+
+      LocalContext[CURRENT_CARD_KEY] = punch.in(card)
     end
 
-    def tock(card)
+    def tock(card: nil)
+      card ||= TickTock.current_card_in_local_context
+
+      LocalContext[CURRENT_CARD_KEY] = card.parent_card
+
       punch.out(card)
     end
   end

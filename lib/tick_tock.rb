@@ -18,5 +18,13 @@ module TickTock
     def default_timer=(timer)
       @default_timer = timer
     end
+
+    def current_card_in_local_context
+      if TickTock::LocalContext.key?(CURRENT_CARD_KEY)
+        TickTock::LocalContext[CURRENT_CARD_KEY]
+      else
+        nil
+      end
+    end
   end
 end
