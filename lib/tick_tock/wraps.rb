@@ -12,13 +12,18 @@ module TickTock
     end
 
     def wrap_proc(callable_to_wrap = nil, **tick_kw_args, &proc_to_wrap)
-      LocalContext.wrap_proc do |*proc_args|
+      proc do |*proc_args|
         new_tick_kw_args = process_tick_subject(tick_kw_args, proc_args)
 
         wrap_block(**new_tick_kw_args) do
           (callable_to_wrap || proc_to_wrap).call(*proc_args)
         end
       end
+    end
+
+    def wrap_proc_context(callable_to_wrap = nil, **tick_kw_args, &proc_to_wrap)
+      wrapped_proc = wrap_proc(callable_to_wrap, **tick_kw_args, &proc_to_wrap)
+      LocalContext.wrap_proc(&wrapped_proc)
     end
 
     def wrap_lazy(lazy_enum_to_wrap, **tick_kw_args)
@@ -36,7 +41,7 @@ module TickTock
     private
 
     # If the `subject` is itself a proc, process the wrapped proc's *args*
-    # to actually generate the subject for the wrapped timing.
+    # to actually generate the subject.
     #
     # @param tick_kw_args [Hash]
     # @param proc_args [Array]
