@@ -1,23 +1,25 @@
 module TickTock
-  # LocalContext provides the conveniences of Thread-local (or Fiber-local)
-  # variables to asynchronous code, where a given Proc may end up executing on a
-  # different thread or fiber from the one in which its local context existed.
+  # Locals provides the conveniences of Thread-local (or Fiber-local) variables
+  # to asynchronous code, where a given Proc may end up executing on a different
+  # thread or fiber from the one in which its local context existed -- or even
+  # on the same thread, but at a later time!
   #
-  # Also useful for Procs created on the same thread, but executed at a later
-  # time or lazily.
-  #
-  # See {#wrap_proc} for an example of how this can be used.
+  # See {#wrap_proc} for an example of how this can be used to capture local
+  # state and wrap it with a Proc for later use, independent of how that state
+  # changes during the intervening period.
   #
   # Here's how the same concept is implemented in the Monix library in Scala:
   # https://github.com/monix/monix/blob/v3.0.0-M3/monix-execution/shared/src/main/scala/monix/execution/misc/Local.scala
-  module LocalContext
+  module Locals
     module_function
 
     # @return [Hash] Default context is an empty hash
     DEFAULT_CONTEXT = {}.freeze
+    private_constant :DEFAULT_CONTEXT
 
-    # @return [Symbol] Key under which context is store as a fiber-local var
+    # @return [Symbol] Key under which context is stored as a fiber-local var
     FIBER_LOCAL_KEY = :"__tick_tock/local_context__"
+    private_constant :FIBER_LOCAL_KEY
 
     # Wraps the current local context into the given proc, so that when it is
     # run it has access to the same local context as when it was wrapped, even
@@ -25,16 +27,19 @@ module TickTock
     # the local context was changed.
     #
     # @example Wrap current local context into a Proc object
-    #   a_proc = proc { TickTock::LocalContext[:foo] }
+    #   # proc which depends on some local variable
+    #   a_proc = proc { "proc sees: " + TickTock::Locals[:foo].to_s }
     #
-    #   TickTock::LocalContext[:foo] = :bar
-    #   wrapped_proc = TickTock::LocalContext.wrap_proc(&a_proc)
+    #   # wraps the current state of the locals into the proc
+    #   TickTock::Locals[:foo] = :bar
+    #   wrapped_proc = TickTock::Locals.wrap_proc(&a_proc)
     #
-    #   TickTock::LocalContext[:foo] = 42
+    #   # later, the state of the locals change, but the wrapped state does not
+    #   TickTock::Locals[:foo] = 42
     #   wrapped_proc.call
-    #   #=> :bar
+    #   #=> "proc sees: bar"
     #
-    #   TickTock::LocalContext[:foo]
+    #   TickTock::Locals[:foo]
     #   #=> 42
     #
     # @param proc_to_wrap [Proc]  A proc to wrap with the current local context

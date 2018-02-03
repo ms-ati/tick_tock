@@ -1,6 +1,6 @@
 require "securerandom"
 
-RSpec.describe TickTock::LocalContext do
+RSpec.describe TickTock::Locals do
   let!(:a_proc) { ->(n) { n * described_class[a_key] } }
 
   let!(:a_key) { "key_" + SecureRandom.hex(2) }
