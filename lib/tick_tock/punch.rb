@@ -34,5 +34,9 @@ module TickTock
       log_card_out&.call(card_out)
       card_out
     end
+
+    def parent_card_of(card)
+      card.parent_card
+    end
   end
 end

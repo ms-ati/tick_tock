@@ -1,8 +1,6 @@
 require "tick_tock/locals"
 
 module TickTock
-  CURRENT_CARD_KEY = :"__tick_tock/current_card__"
-
   module Wraps
     def wrap_block(**tick_kw_args)
       card = tick(**tick_kw_args)
