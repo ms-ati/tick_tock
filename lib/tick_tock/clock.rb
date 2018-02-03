@@ -1,4 +1,7 @@
-require "values"
+require "tick_tock/card"
+require "tick_tock/card_logger"
+require "tick_tock/locals"
+require "tick_tock/punch"
 
 module TickTock
   # A {TickTock::Clock} can {#tick} and then {#tock}. Inspired by the
@@ -54,15 +57,22 @@ module TickTock
   # @attr_reader on_tick [Proc, nil]  Callback on {#tick}
   # @attr_reader on_tock [Proc, nil]  Callback on {#tock}
   class Clock < Value.new(:punch, :on_tick, :on_tock)
+    # @return [Clock]  an instance with the default configuration
+    def self.default
+      log_card = CardLogger.default.method(:call)
+      with(punch: Punch.default, on_tick: log_card, on_tock: log_card)
+    end
+
     # Starts timing a new card, calls any given {#on_tick}, and returns it.
     #
     # @param subject [Object]  Description of the subject we are timing
     # @return        [Object]  A new card representing the new timing context
     def tick(subject: nil)
-      card = punch.card(subject: subject, parent_card: current_card)
+      card = punch.card(subject: subject, parent_card: self.class.current_card)
       card_in = punch.in(card)
-      on_tick&.call(card_in)
       self.class.current_card = card_in
+      on_tick&.call(card_in)
+      card_in
     end
 
     # Completes timing the given card, calls any given {#on_tock}, and returns
@@ -72,8 +82,9 @@ module TickTock
     # @return     [Object]  The card after being marked completed
     def tock(card:)
       card_out = punch.out(card)
-      on_tock&.call(card_out)
       self.class.current_card = punch.parent_card_of(card_out)
+      on_tock&.call(card_out)
+      card_out
     end
 
     private
