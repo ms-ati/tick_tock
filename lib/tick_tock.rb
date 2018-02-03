@@ -1,4 +1,4 @@
-require "tick_tock/local_context"
+require "tick_tock/locals"
 require "tick_tock/punch"
 require "tick_tock/timer"
 require "tick_tock/version"

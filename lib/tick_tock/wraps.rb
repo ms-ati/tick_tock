@@ -1,4 +1,4 @@
-require "tick_tock/local_context"
+require "tick_tock/locals"
 
 module TickTock
   CURRENT_CARD_KEY = :"__tick_tock/current_card__"
