@@ -86,6 +86,11 @@ module TickTock
       context.key?(key)
     end
 
+    # Clears the current local context
+    def clear!
+      self.context = DEFAULT_CONTEXT
+    end
+
     # @return [Hash{String, Symbol => Object}]
     #   The current local context represented as a frozen hash.
     def context
@@ -94,11 +99,6 @@ module TickTock
       else
         DEFAULT_CONTEXT
       end
-    end
-
-    # Clears the current local context
-    def clear!
-      self.context = DEFAULT_CONTEXT
     end
 
     # @api private
