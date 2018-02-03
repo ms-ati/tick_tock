@@ -11,6 +11,9 @@ wrapped_slow_proc = TickTock.wrap_proc(slow_proc, subject: ->(n) { "Num #{n}" })
 wrapped_lazy_enum = TickTock.wrap_lazy(lazy_enum, subject: "Lazy Enum")
 
 # Here we both log the block and also hierarchically log what happens inside it:
-TickTock.wrap_block(subject: "Top Level") do
-  pp wrapped_lazy_enum.map(&wrapped_slow_proc).to_a
-end
+result =
+  TickTock.wrap_block(subject: "Top Level") do
+    wrapped_lazy_enum.map(&wrapped_slow_proc).to_a
+  end
+
+pp result
