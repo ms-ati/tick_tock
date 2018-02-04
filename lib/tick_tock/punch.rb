@@ -7,15 +7,20 @@ module TickTock
     end
 
     def card(subject: nil, parent_card: nil)
-      Card.with(subject: subject, parent_card: parent_card, in: nil, out: nil)
+      Card.with(
+        subject: subject,
+        parent_card: parent_card,
+        time_in: nil,
+        time_out: nil
+      )
     end
 
     def in(card)
-      card.with(in: time_now.call)
+      card.with(time_in: time_now.call)
     end
 
     def out(card)
-      card.with(out: time_now.call)
+      card.with(time_out: time_now.call)
     end
 
     def parent_card_of(card)

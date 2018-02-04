@@ -37,6 +37,7 @@ module TickTock
   #     # @param punch   [Punch]      Implementation of {Punch} to use
   #     # @param on_tick [Proc, nil]  Callback on {#tick}
   #     # @param on_tock [Proc, nil]  Callback on {#tock}
+  #     # @return [Clock]
   #     def self.with(punch:, on_tick:, on_tock:); end
   #
   #     # @param punch   [Punch]      Implementation of {Punch} to use
@@ -45,7 +46,7 @@ module TickTock
   #     def initialize(punch, on_tick, on_tock); end
   #
   #     # @return [Clock]
-  #     #   a copy of this instance of Clock, with any given values changed.
+  #     #   a copy of this instance with any given values replaced.
   #     #
   #     # @param punch   [Punch]      Implementation of {Punch} to use
   #     # @param on_tick [Proc, nil]  Callback on {#tick}

@@ -101,7 +101,7 @@ module TickTock
     card = tick(subject: subject)
     yield
   ensure
-    tock(card: card)
+    tock(card: card) unless card.nil?
   end
 
   # Wraps a
@@ -139,30 +139,33 @@ module TickTock
   #   the args that are actually eventually passed to the final proc, will
   #   generate the actual subject.
   #
+  # @param save_context [Boolean]
+  #   Optionally wrap the currently active timing contexts into the Proc, so
+  #   that when executed asynchronously it will retain the same context.
+  #
   # @param proc_to_wrap [Proc]
   #   Alternatively you can pass the callable as a "block" parameter -- only
   #   used if callable_to_wrap is nil.
   #
   # @return [Proc]
   #   A Proc wrapping the given callable in a timing context.
-  def tick_tock_proc(callable_to_wrap = nil, subject: nil, &proc_to_wrap)
-    should_save_context = tick_kw_args.delete(:save_context)
-
+  def tick_tock_proc(
+    callable_to_wrap = nil,
+    subject: nil,
+    save_context: false,
+    &proc_to_wrap
+  )
     tt_proc = proc do |*proc_args|
       # if original subject was a Proc, apply it to args to create the subject
-      subject = tick_kw_args[:subject]
       subject = subject&.respond_to?(:call) ? subject.call(*proc_args) : subject
-      new_tick_kw_args = tick_kw_args.merge(subject: subject)
 
-      tick_tock(**new_tick_kw_args) do
+      tick_tock(subject: subject) do
         (callable_to_wrap || proc_to_wrap).call(*proc_args)
       end
     end
 
-    should_save_context ? Locals.wrap_proc(&tt_proc) : tt_proc
+    save_context ? Locals.wrap_proc(&tt_proc) : tt_proc
   end
-
-
 
   # @!endgroup
 end

@@ -28,8 +28,8 @@ module TickTock
     private
 
     def format(card)
-      prefix, verb = card.out.nil? ? [">", "Started"] : ["<", "Completed"]
-      suffix = card.out && "[#{elapsed(card.out - card.in)}]"
+      prefix, verb = card.time_out.nil? ? [">", "Started"] : ["<", "Completed"]
+      suffix = card.time_out && "[#{elapsed(card.time_out - card.time_in)}]"
       [prefix * depth(card), verb, card.subject, suffix].compact.join(" ")
     end
 
