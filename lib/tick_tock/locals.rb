@@ -1,15 +1,16 @@
 module TickTock
-  # Locals provides the conveniences of Thread-local (or Fiber-local) variables
-  # to asynchronous code, where a given Proc may end up executing on a different
-  # thread or fiber from the one in which its local context existed -- or even
-  # on the same thread, but at a later time!
+  # {Locals} provides the convenience of Thread-local (or Fiber-local) variables
+  # to asynchronous code. By "asynchronous", we simply mean that a given Proc
+  # may end up executing on a different Thread or Fiber from the one in which
+  # it was created -- or equally -- on the same thread, but at a later time!
   #
-  # See {#wrap_proc} for an example of how this can be used to capture local
+  # See {.wrap_proc} for an example of how this can be used to capture local
   # state and wrap it with a Proc for later use, independent of how that state
-  # changes during the intervening period.
+  # may change during the intervening period.
   #
-  # Here's how the same concept is implemented in the Monix library in Scala:
-  # https://github.com/monix/monix/blob/v3.0.0-M3/monix-execution/shared/src/main/scala/monix/execution/misc/Local.scala
+  # {https://github.com/monix/monix/blob/v3.0.0-M3/monix-execution/shared/src/main/scala/monix/execution/misc/Local.scala
+  # Here's how similar concepts are implemented} in the Monix library in Scala.
+  #
   module Locals
     module_function
 
@@ -67,7 +68,7 @@ module TickTock
       context.fetch(key)
     end
 
-    # Updates the current local context to map `key` to `value`. Works in a
+    # Updates the current local context to map *key* to *value*. Works in a
     # non-mutative way, so that any other references to the old context will be
     # left unchanged.
     #

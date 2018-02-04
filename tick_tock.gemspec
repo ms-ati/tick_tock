@@ -8,9 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Marc Siegel"]
   spec.email         = ["marc@usainnov.com"]
 
-  spec.summary       = "TickTock is an easy Ruby library for timing code."
-  spec.description   = "TickTock is an easy Ruby library for timing all sorts "\
-                       "of code, including lazy and asynchronous code."
+  spec.summary       = "TickTock wraps Ruby code in timing and logging easily!"
+  spec.description   = "TickTock makes it easy to wrap your Ruby code to "\
+                       "measure nested timings and to log them -- even when "\
+                       "the code is asynchronous or lazy, so straight-forward "\
+                       "blocks do not work. Versions follow SemVer."
   spec.homepage      = "https://github.com/ms-ati/tick_tock"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
