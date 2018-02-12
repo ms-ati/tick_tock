@@ -21,8 +21,19 @@ module TickTock
       )
     end
 
+    # Default card logging action is to format it and send to the configured
+    # {Logger} instance.
+    #
+    # @param card [Card]
+    #   Card to log in or out, depending on the state of the card.
+    #
+    # @return [String, nil]
+    #   Formatted string that was logged, or +nil+ if the configured severity
+    #   was not high enough to be logged by the configured logger.
     def call(card)
-      logger.add(severity, nil, nil) { format(card) }
+      formatted = nil
+      logger.add(severity, nil, nil) { formatted = format(card) }
+      formatted
     end
 
     private

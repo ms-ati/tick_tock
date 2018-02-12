@@ -32,6 +32,8 @@ module TickTock
   #
   # @!parse
   #   class Clock
+  #     # @!group Class Methods due to being a Value object
+  #
   #     # Constructor accepting keyword args.
   #     #
   #     # @param punch   [Punch]      Implementation of {Punch} to use
@@ -39,6 +41,10 @@ module TickTock
   #     # @param on_tock [Proc, nil]  Callback on {#tock}
   #     # @return [Clock]
   #     def self.with(punch:, on_tick:, on_tock:); end
+  #
+  #     # @!endgroup
+  #
+  #     # @!group Instance Methods due to being a Value object
   #
   #     # @param punch   [Punch]      Implementation of {Punch} to use
   #     # @param on_tick [Proc, nil]  Callback on {#tick}
@@ -52,6 +58,8 @@ module TickTock
   #     # @param on_tick [Proc, nil]  Callback on {#tick}
   #     # @param on_tock [Proc, nil]  Callback on {#tock}
   #     def with(punch: nil, on_tick: nil, on_tock: nil); end
+  #
+  #     # @!endgroup
   #   end
   #
   # @attr_reader punch   [Punch]      Implementation of {Punch} to use
@@ -88,13 +96,21 @@ module TickTock
       card_out
     end
 
+    def with_added_on_tick(proc_to_add)
+      with(on_tick: self.class.compose_procs_arity_1(proc_to_add, on_tick))
+    end
+
+    def with_added_on_tock(proc_to_add)
+      with(on_tock: self.class.compose_procs_arity_1(proc_to_add, on_tock))
+    end
+
     private
 
     # @return [Symbol]  Key to store and retrieve current punch card in {Locals}
     CURRENT_CARD = :"__tick_tock/current_card__"
     private_constant :CURRENT_CARD
 
-    # @return [Punch::Card]  The currently active punch card
+    # @return [Card]  The currently active punch card
     def self.current_card
       Locals.key?(CURRENT_CARD) ? TickTock::Locals[CURRENT_CARD] : nil
     end
@@ -102,6 +118,10 @@ module TickTock
     # Sets the currently active punch card
     def self.current_card=(card)
       Locals[CURRENT_CARD] = card
+    end
+
+    def self.compose_procs_arity_1(proc_to_add, current)
+      ->(x) { proc_to_add.call(current.call(x)) }
     end
   end
 end
